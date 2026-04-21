@@ -1,0 +1,47 @@
+# Ingress: defines HOST-based routing rules for Traefik
+# Traefik (built into K3s) reads this resource and configures itself
+# to route incoming HTTP requests based on the HOST header
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    # Tell Traefik this Ingress belongs to it
+    spec.ingressClassName: traefik
+spec:
+  rules:
+  # Rule 1: HOST header = app1.com → route to app-one-svc
+  - host: app1.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-one-svc
+            port:
+              number: 80
+
+  # Rule 2: HOST header = app2.com → route to app-two-svc
+  - host: app2.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-two-svc
+            port:
+              number: 80
+
+  # Default rule: no HOST match → route to app-three-svc
+  # When no host is specified, this catches all remaining traffic
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-three-svc
+            port:
+              number: 80

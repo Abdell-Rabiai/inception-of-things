@@ -1,0 +1,39 @@
+# Deployment: 3 replicas of app-two
+# The Service will load-balance requests across all 3 pods
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-two
+spec:
+  replicas: 3          # Three copies — subject requires this
+  selector:
+    matchLabels:
+      app: app-two
+  template:
+    metadata:
+      labels:
+        app: app-two
+    spec:
+      containers:
+      - name: hello-kubernetes
+        image: paulbouwer/hello-kubernetes:1.10.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MESSAGE
+          value: "Hello from app2."
+---
+# Service for app-two
+# When this Service receives a request, it distributes it across
+# all 3 replica pods using round-robin load balancing
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-two-svc
+spec:
+  selector:
+    app: app-two
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP

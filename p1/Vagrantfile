@@ -1,0 +1,30 @@
+Vagrant.configure("2") do |config|
+
+    config.vm.box = "debian/bookworm64"
+    config.vm.box_check_update = false
+  
+    config.vm.define "arabiaiS" do |server|
+      server.vm.hostname = "arabiaiS"
+      server.vm.network "private_network", ip: "192.168.56.110"
+      server.vm.provider "virtualbox" do |vb|
+        vb.memory = 1024
+        vb.cpus = 1
+        vb.name = "arabiaiS"
+        vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      end
+      server.vm.provision "shell", path: "scripts/server.sh"
+    end
+  
+    config.vm.define "arabiaiSW" do |agent|
+      agent.vm.hostname = "arabiaiSW"
+      agent.vm.network "private_network", ip: "192.168.56.111"
+      agent.vm.provider "virtualbox" do |vb|
+        vb.memory = 1024
+        vb.cpus = 1
+        vb.name = "arabiaiSW"
+        vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      end
+      agent.vm.provision "shell", path: "scripts/agent.sh"
+    end
+  
+  end

@@ -1,0 +1,33 @@
+# Argo CD Application resource
+# This is a custom Kubernetes resource that tells Argo CD:
+# - WHERE to find the desired state (GitHub repo)
+# - WHAT path in the repo contains the manifests
+# - WHERE to deploy them (which cluster and namespace)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wil-playground
+  namespace: argocd          # Must be in the argocd namespace
+spec:
+  project: default           # Argo CD project (default is fine for our use)
+
+  # SOURCE: where Argo CD pulls the desired state from
+  source:
+    repoURL: https://github.com/Abdell-Rabiai/arabiai-iot.git
+    targetRevision: master    # Branch to watch (your repo uses master)
+    path: manifests           # Folder inside the repo containing YAML files
+
+  # DESTINATION: where to deploy the resources
+  destination:
+    server: https://kubernetes.default.svc  # Deploy to the local cluster
+    namespace: dev            # Target namespace for the application
+
+  # SYNC POLICY: how Argo CD handles changes
+  syncPolicy:
+    automated:
+      selfHeal: true          # If someone manually changes the cluster,
+                              # Argo CD reverts it to match Git (Git wins)
+      prune: true             # If a resource is removed from Git,
+                              # Argo CD deletes it from the cluster too
+    syncOptions:
+    - CreateNamespace=true    # Create the dev namespace if it doesn't exist

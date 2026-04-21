@@ -1,0 +1,37 @@
+# Deployment: app-three serves as the default fallback
+# Any request that doesn't match app1.com or app2.com lands here
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-three
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-three
+  template:
+    metadata:
+      labels:
+        app: app-three
+    spec:
+      containers:
+      - name: hello-kubernetes
+        image: paulbouwer/hello-kubernetes:1.10.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MESSAGE
+          value: "Hello from app3."
+---
+# Service for app-three
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-three-svc
+spec:
+  selector:
+    app: app-three
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP

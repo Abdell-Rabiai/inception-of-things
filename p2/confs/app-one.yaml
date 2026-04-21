@@ -1,0 +1,83 @@
+# Deployment: tells Kubernetes to run 1 copy of app-one
+# A Deployment manages the lifecycle of pods — if one crashes, it creates a replacement
+
+# This tells Kubernetes which API group and version to use.
+# Deployments live in the apps API group, version v1. If you wrote v1beta1
+# you're telling Kubernetes "I'm using the Deployment resource from the apps/v1 package."
+apiVersion: apps/v1
+
+# The type of resource. Kubernetes has dozens of resource types (Pod, Service, ConfigMap, Secret, etc.).
+# This line says "create a Deployment object.
+kind: Deployment
+
+# Every Kubernetes object needs a name. This is how you reference it later
+# `kubectl get deployment app-one`, `kubectl delete deployment app-one`. 
+# Names must be unique within a namespace.
+metadata:
+  name: app-one
+
+# spec is where you describe the desired state, this is a fundamental Kubernetes concept:
+# you don't tell Kubernetes "start a container." You say "I want 1 replica running at all times."
+# Kubernetes then figures out how to make reality match your desire. If the pod crashes,
+# the Deployment controller notices reality (0 replicas) doesn't match desire (1 replica) and creates a new one.
+spec:
+  replicas: 1          # Only one copy of this app
+  # This is how the Deployment knows which pods belong to it. Kubernetes uses labels (key-value pairs) to connect resources.
+  # The selector says "I manage pods that have the label app: app-one."
+  # analogy : I am hunting for pods that look like THIS.
+  selector:
+    matchLabels:
+      app: app-one     # This Deployment manages pods with this label
+  
+  # The template section is the blueprint for creating pods. Every pod created by this Deployment gets the label app: app-one.
+  # Notice this label must match the selector above — if they don't match,
+  # the Deployment creates pods but doesn't recognize them as its own, and it keeps creating more forever.
+  # analogy : When I am forced to create a new pod, I will make it look like THIS.
+  template:
+    metadata:
+      labels:
+        app: app-one   # Label applied to each pod — must match selector above
+    
+    # This is the actual container definition. specifications including the docker image to pull from Docker Hub.
+    spec:
+      containers:
+      - name: hello-kubernetes
+        image: paulbouwer/hello-kubernetes:1.10.1
+        # This declares that the container listens on port 8080. It's informational
+        # it doesn't actually open the port (the container does that itself).
+        ports:
+        - containerPort: 8080   # The port the container listens on
+        # Environment variables injected into the container.
+        env:
+        - name: MESSAGE
+          value: "Hello from app1."   # Custom message so we can identify which app responds
+---
+# Service: gives app-one pods a stable internal address
+# Without a Service, other components can't reliably reach the pods
+# because pod IPs change every time they restart
+
+# Services are in the core API group (v1), not apps/v1
+apiVersion: v1
+kind: Service
+
+# The Service name matters because the Ingress references it. When the Ingress says "send traffic to app-one-svc#
+# Kubernetes looks up this exact name.
+metadata:
+  name: app-one-svc
+spec:
+  
+  # The Service finds pods by their labels -- It says "route traffic to any pod with the name `app-one`." 
+  # Notice this matches the label in the Deployment template.
+  # This is how the chain connects: Deployment creates pods with label app: app-one, Service finds pods with that same label.
+  selector:
+    app: app-one       # Route traffic to pods with this label
+  # port mapping
+  # The Service listens on port 80 (the standard HTTP port).
+  # When it receives traffic, it forwards it to port 8080 on the pod (where the container is actually listening)
+  ports:
+  - port: 80           # The port the Service listens on
+    targetPort: 8080   # Forward to this port on the pod
+  
+  # ClusterIP means the Service is only reachable from inside the cluster.
+  # It gets a virtual IP (like 10.43.x.x) that exists only within Kubernetes' internal network.
+  type: ClusterIP      # Internal-only address (default)

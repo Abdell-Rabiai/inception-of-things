@@ -1,0 +1,12 @@
+# Vagrant
+.vagrant/
+*.log
+p1/scripts/node-token
+
+# OS files
+.DS_Store
+
+# VirtualBox
+*.vdi
+*.vmdk
+*.vbox
