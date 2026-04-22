@@ -10,3 +10,4 @@ p1/scripts/node-token
 *.vdi
 *.vmdk
 *.vbox
+p3/credentials.txt

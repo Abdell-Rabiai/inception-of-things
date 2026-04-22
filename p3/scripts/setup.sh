@@ -50,24 +50,40 @@ kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
 echo -e "${GREEN}[5/5] Deploying Argo CD Application...${NC}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 kubectl apply -f "$SCRIPT_DIR/../confs/argocd-app.yaml"
+# Wait for the app to deploy
+echo "Waiting for application to deploy in dev namespace..."
+sleep 30
+kubectl wait --for=condition=Ready pods --all -n dev --timeout=120s 2>/dev/null || true
+
+# ============================================================
+# Save credentials to file and print access information
+# ============================================================
+ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+cat > "$SCRIPT_DIR/../credentials.txt" << EOF
+============================================
+  Argo CD Credentials
+============================================
+
+Web UI:    https://localhost:8080
+Username:  admin
+Password:  $ARGOCD_PASSWORD
+
+Application: curl http://localhost:8888
+
+Useful commands:
+  kubectl get pods -n argocd
+  kubectl get pods -n dev
+  kubectl get ns
+============================================
+EOF
 
 echo ""
 echo -e "${GREEN}============================================${NC}"
 echo -e "${GREEN}  Setup complete!${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo ""
-
-ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
-
-echo -e "${YELLOW}Argo CD Web UI:${NC}"
-echo "  URL: https://localhost:8080"
-echo "  Username: admin"
-echo "  Password: $ARGOCD_PASSWORD"
+echo -e "${YELLOW}Credentials saved to: p3/credentials.txt${NC}"
 echo ""
-echo -e "${YELLOW}Application:${NC}"
-echo "  curl http://localhost:8888"
-echo ""
-echo -e "${YELLOW}Useful commands:${NC}"
-echo "  kubectl get pods -n argocd"
-echo "  kubectl get pods -n dev"
-echo "  kubectl get ns"
+cat "$SCRIPT_DIR/../credentials.txt"
