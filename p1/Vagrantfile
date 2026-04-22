@@ -7,8 +7,8 @@ Vagrant.configure("2") do |config|
       server.vm.hostname = "arabiaiS"
       server.vm.network "private_network", ip: "192.168.56.110"
       server.vm.provider "virtualbox" do |vb|
-        vb.memory = 1024
-        vb.cpus = 1
+        vb.memory = 2048
+        vb.cpus = 2
         vb.name = "arabiaiS"
         vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       end
@@ -19,8 +19,8 @@ Vagrant.configure("2") do |config|
       agent.vm.hostname = "arabiaiSW"
       agent.vm.network "private_network", ip: "192.168.56.111"
       agent.vm.provider "virtualbox" do |vb|
-        vb.memory = 1024
-        vb.cpus = 1
+        vb.memory = 2048
+        vb.cpus = 2
         vb.name = "arabiaiSW"
         vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       end
