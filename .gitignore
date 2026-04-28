@@ -11,3 +11,4 @@ p1/scripts/node-token
 *.vmdk
 *.vbox
 p3/credentials.txt
+bonus/credentials.txt

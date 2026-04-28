@@ -1,0 +1,14 @@
+# Service for wil-playground
+# Gives the deployment a stable internal address inside the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: wil-playground-svc
+  namespace: dev
+spec:
+  selector:
+    app: wil-playground
+  ports:
+  - port: 8888
+    targetPort: 8888
+  type: ClusterIP

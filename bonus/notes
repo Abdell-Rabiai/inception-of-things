@@ -1,0 +1,101 @@
+bonus/
+├── .gitignore              # excludes credentials.txt
+├── scripts/
+│   ├── install-prereqs.sh  # installs Docker, k3d, kubectl, helm
+│   └── setup.sh            # main script: cluster + ArgoCD + GitLab
+└── confs/
+    ├── gitlab-values.yaml  # Helm configuration for minimal GitLab
+    ├── argocd-app.yaml     # Argo CD Application (points to local GitLab)
+    └── manifests/
+        ├── deployment.yaml # wil-playground v1 (pushed to GitLab repo)
+        └── service.yaml    # ClusterIP service for the app
+
+The critical new concept: Kubernetes internal DNS
+This is the most important thing in the bonus. In Part 3, Argo CD reached GitHub over the public internet.
+In the bonus, Argo CD reaches GitLab using Kubernetes internal DNS:
+http://gitlab-webservice-default.gitlab.svc.cluster.local:8181.
+This works because every Kubernetes Service automatically gets a DNS entry following the pattern:
+ <service-name>.<namespace>.svc.cluster.local.
+ No port-forwarding, no external network — it's direct pod-to-pod communication within the cluster.
+
+
+ How to run it on your Droplet
+
+SSH into your Droplet
+Copy the bonus/ folder to your project
+Run bash bonus/scripts/install-prereqs.sh (installs Helm — the only new tool)
+Run bash bonus/scripts/setup.sh (takes 10-15 minutes, mostly waiting for GitLab)
+
+
+------------------------------------------------------- check if the setup is done -----------------------------------------------
+# 1. Verify all three namespaces exist
+kubectl get ns
+
+# 2. Check pods in each namespace
+kubectl get pods -n gitlab
+kubectl get pods -n argocd
+kubectl get pods -n dev
+
+# 3. Check the Argo CD application status
+kubectl get applications -n argocd
+
+# 4. Test the app responds with v1
+kubectl port-forward svc/wil-playground-svc -n dev 8888:8888 &
+in case the port is already in use, do the following:
+# Find what's using port 8888
+sudo lsof -i :8888
+
+# Or kill all port-forwards
+pkill -f "port-forward"
+
+# Then retry OR use a different local port 8889 for example
+
+kubectl port-forward svc/wil-playground-svc -n dev 8889:8888 &
+curl http://localhost:8889
+
+
+------------------------------------------------------- check if the setup is done -----------------------------------------------
+
+script to test the sqirch from v1 to v2 
+
+# Port-forward GitLab
+kubectl port-forward svc/gitlab-webservice-default -n gitlab 8181:8181 &
+
+# Clone the repo from local GitLab
+git clone http://root:glpat-Ub1o2hmYmH93NNwywxuF8W86MQp1OjEH.01.0w1x0vwkm@localhost:8181/root/arabiai-iot.git
+cd arabiai-iot
+
+# Change v1 to v2
+sed -i 's/wil42\/playground:v1/wil42\/playground:v2/g' manifests/deployment.yaml
+
+# Push to local GitLab
+git add . && git commit -m "Update to v2" && git push
+
+# Wait ~30 seconds for Argo CD to sync, then verify
+sleep 30
+curl http://localhost:8888
+
+
+-------------------------------------------------------------------------------------------------
+# if port-forward for the app got killed when the pod restarted during the v2 deployment.
+# Kill any stale port-forwards
+pkill -f "port-forward.*8889"
+
+# Wait for the new pod to be ready
+kubectl wait --for=condition=Ready pods -l app=wil-playground -n dev --timeout=60s
+
+# Re-establish port-forward
+kubectl port-forward svc/wil-playground-svc -n dev 8889:8888 &
+sleep 3
+
+# if it doesn't work
+sudo lsof -i :8181
+# Note the PID, then:
+kill -9 <PID>
+
+# Retry
+kubectl port-forward svc/gitlab-webservice-default -n gitlab 8181:8181 &
+
+# Test
+curl http://localhost:8889
+curl http://localhost:8181

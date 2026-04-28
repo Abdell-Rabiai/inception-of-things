@@ -1,0 +1,39 @@
+# Argo CD Application resource — Bonus version
+# 
+# KEY DIFFERENCE FROM PART 3:
+# In Part 3, repoURL pointed to GitHub (https://github.com/...)
+# Here, it points to the local GitLab instance running inside the cluster.
+#
+# Inside a Kubernetes cluster, services can reach each other using
+# internal DNS: <service-name>.<namespace>.svc.cluster.local
+# So Argo CD reaches GitLab at:
+#   http://gitlab-webservice-default.gitlab.svc.cluster.local:8181
+#
+# This is the core of the bonus: the entire GitOps loop is self-contained.
+# No external dependencies — Git server, CD tool, and app all live in the cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wil-playground
+  namespace: argocd
+spec:
+  project: default
+
+  # SOURCE: local GitLab instance (not GitHub)
+  source:
+    repoURL: http://gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/iot-manifests.git
+    targetRevision: main
+    path: manifests
+
+  # DESTINATION: same as Part 3
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev
+
+  # SYNC POLICY: same as Part 3
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+    - CreateNamespace=true
