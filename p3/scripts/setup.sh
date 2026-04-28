@@ -35,7 +35,7 @@ kubectl create namespace argocd
 kubectl create namespace dev
 
 echo -e "${GREEN}[4/5] Installing Argo CD...${NC}"
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml 2>&1 | grep -v "is invalid"
 
 echo "Waiting for Argo CD pods to start (this may take 1-2 minutes)..."
 sleep 10
