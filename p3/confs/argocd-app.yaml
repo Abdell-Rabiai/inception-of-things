@@ -19,7 +19,7 @@ spec:
 
   # DESTINATION: where to deploy the resources
   destination:
-    server: https://kubernetes.default.svc  # Deploy to the local cluster
+    server: https://kubernetes.default.svc  # Deploy to the local cluster (same as the one argo-cd is running in)
     namespace: dev            # Target namespace for the application
 
   # SYNC POLICY: how Argo CD handles changes

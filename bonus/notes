@@ -22,7 +22,6 @@ This works because every Kubernetes Service automatically gets a DNS entry follo
  How to run it on your Droplet
 
 SSH into your Droplet
-Copy the bonus/ folder to your project
 Run bash bonus/scripts/install-prereqs.sh (installs Helm — the only new tool)
 Run bash bonus/scripts/setup.sh (takes 10-15 minutes, mostly waiting for GitLab)
 

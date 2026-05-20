@@ -25,7 +25,7 @@ spec:
 ---
 # Service for app-two
 # When this Service receives a request, it distributes it across
-# all 3 replica pods using round-robin load balancing
+# all 3 replica pods using round-robin load balancing algorithm
 apiVersion: v1
 kind: Service
 metadata:
