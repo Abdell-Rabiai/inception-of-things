@@ -83,3 +83,6 @@ redis:
 minio:
   persistence:
     size: 2Gi
+# the email issue
+certmanager-issuer:
+  email: root@gitlab.local
