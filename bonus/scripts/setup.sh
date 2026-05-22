@@ -82,7 +82,7 @@ helm repo update
 
 # Install GitLab using our minimal values file
 # See confs/gitlab-values.yaml for what's disabled and why
-helm upgrade --install gitlab gitlab/gitlab \
+helm upgrade --install gitlab gitlab/gitlab --version 9.11.4 \
   --namespace gitlab \
   --timeout 600s \
   -f "$CONFS_DIR/gitlab-values.yaml"

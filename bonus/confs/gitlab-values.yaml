@@ -1,19 +1,5 @@
 # GitLab Helm Chart — Minimal values for K3d bonus
-#
-# WHY THESE SETTINGS:
-# GitLab is designed to run in production clusters with 16+ GB RAM.
-# We're running it in a 8GB RAM Droplet alongside Argo CD and the app.
-# So we strip it down to the bare essentials:
-#   KEEP:    webservice, gitaly, sidekiq, shell, postgresql, redis, minio
-#   DISABLE: everything else (runner, registry, monitoring, certmanager, etc.)
-#
-# WHAT EACH DISABLED COMPONENT DOES (so you know what you're skipping):
-#   certmanager:   automates HTTPS certificates — not needed internally
-#   nginx-ingress: load balancer — K3d's Traefik handles this
-#   prometheus:    monitoring/metrics — not needed for this exercise
-#   gitlab-runner: executes CI/CD pipelines — we only need Git hosting
-#   registry:      Docker container registry — we use Docker Hub
-#   kas:           Kubernetes Agent — for connecting external clusters
+# Pinned to chart v9.x which still supports bundled PostgreSQL and Redis
 
 global:
   hosts:
@@ -27,11 +13,11 @@ global:
     enabled: false
   appConfig:
     enableUsagePing: false
-  edition: ce                    # Community Edition (free, open-source)
+  edition: ce
 
-# Disable non-essential sub-charts
-# IMPORTANT: installCertmanager is a TOP-LEVEL key, not certmanager.install
-# The certmanager sub-chart schema doesn't accept 'install' as a property.
+certmanager-issuer:
+  email: root@gitlab.local
+
 installCertmanager: false
 nginx-ingress:
   enabled: false
@@ -42,7 +28,6 @@ gitlab-runner:
 registry:
   enabled: false
 
-# GitLab core services — minimal replicas and resources
 gitlab:
   webservice:
     minReplicas: 1
@@ -69,20 +54,16 @@ gitlab:
     persistence:
       size: 2Gi
 
-# Database and cache — small persistent volumes
 postgresql:
   primary:
     persistence:
       size: 2Gi
+
 redis:
   master:
     persistence:
       size: 1Gi
 
-# MinIO: object storage for GitLab uploads/artifacts
 minio:
   persistence:
     size: 2Gi
-# the email issue
-certmanager-issuer:
-  email: root@gitlab.local
